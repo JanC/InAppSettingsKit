@@ -164,6 +164,9 @@
     targetViewController.delegate = self.delegate;
     targetViewController.showCreditsFooter = self.showCreditsFooter;
 
+    //todo
+    targetViewController.title = @"";
+
 
     IASKSettingStoreMemory *memoryStore = [IASKSettingStoreMemory objectWithUserPrefArrayId:_accoutArrayId backendSettingStore:self.settingsStore];
 

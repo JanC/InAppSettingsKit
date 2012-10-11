@@ -41,7 +41,8 @@
 - (void)setObject:(id)value forKey:(NSString*)key {
     [_newMemorySettingStoreDict setObject:value forKey:key];
 
-    //[self synchronize];
+    // call this to force to save the current memory dict to the backend
+    [self synchronizeAndAddNew:NO];
 }
 
 // read the values from the old one
@@ -64,8 +65,13 @@
 }
 
 
-
 - (BOOL)synchronize {
+
+    return [self synchronizeAndAddNew:YES];
+
+}
+
+- (BOOL)synchronizeAndAddNew:(BOOL) addIfNew {
 
     NSArray * _backEndArray = [_backendSettingStore objectForKey:_userPrefArrayId];
 
@@ -96,7 +102,10 @@
 
     } else{
         // add the new one
-        [mutableArray addObject:_newMemorySettingStoreDict];
+        if(addIfNew) {
+            [mutableArray addObject:_newMemorySettingStoreDict];
+        }
+
     }
 
 
