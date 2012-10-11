@@ -36,6 +36,13 @@
 
 - (void)viewWillAppear:(BOOL)animated {
     //todo check if this has to be overwritten
+
+    if([self.themeDelegate respondsToSelector:@selector(settingsViewController:themeTableView:)]) {
+        [self.themeDelegate settingsViewController:self   themeTableView:self.tableView];
+    }
+
+    [self synchronizeSettings];
+    [self reloadAccountsAnimated:NO];
 }
 
 
@@ -92,13 +99,8 @@
 
     } else {
         // account entry
-
-
         NSDictionary *accountDict = [_accountArray objectAtIndex:(NSUInteger) indexPath.row];
         NSAssert([accountDict isKindOfClass:[NSDictionary class]], @"Backend store object for key %@  and index %d must be an NSDictionary", _accoutArrayId, indexPath.row);
-
-
-        // todo check if delegate can supply a cell other
 
         if(self.accountCellTitleKey) {
             //cell.textLabel.text = [accountDict objectForKey:@"myAccountFullName"];
@@ -108,6 +110,16 @@
         if(self.accountCellSubtitleKey) {
             cell.detailTextLabel.text = [accountDict objectForKey:self.accountCellSubtitleKey];;
         }
+
+        // no subtitle and no title key supplied, ask the delegate for a cell
+        if(!self.accountCellSubtitleKey && !self.accountCellTitleKey && [self.delegate respondsToSelector:@selector(settingsViewController:tableView:cellForRowAtIndexPath:)] ) {
+            cell = [self.delegate settingsViewController:self tableView:tableView cellForRowAtIndexPath:indexPath];
+        }
+
+    }
+
+    if([self.themeDelegate respondsToSelector:@selector(settingsViewController:tableView:themeCell:)]) {
+        [self.themeDelegate settingsViewController:self   tableView:self.tableView themeCell:cell];
     }
 
     return cell;
@@ -117,8 +129,16 @@
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
 
     // do not allow to edit the "Add Accout" row
-    return indexPath.row != _accountArray.count;
-    //return YES;
+    if(indexPath.row == _accountArray.count) {
+        return NO;
+    }
+
+
+    if([self.delegate respondsToSelector:@selector(settingsViewController:tableView:canEditRowAtIndexPath:)]) {
+        return [self.delegate settingsViewController:self tableView:tableView canEditRowAtIndexPath:indexPath];
+    }
+
+    return YES;
 
 }
 
@@ -140,12 +160,16 @@
     targetViewController.settingsStore = nil;
     targetViewController.file = _accountTemplatePlist;
 
+    targetViewController.themeDelegate = self.themeDelegate;
+    targetViewController.delegate = self.delegate;
+    targetViewController.showCreditsFooter = self.showCreditsFooter;
+
 
     IASKSettingStoreMemory *memoryStore = [IASKSettingStoreMemory objectWithUserPrefArrayId:_accoutArrayId backendSettingStore:self.settingsStore];
 
     targetViewController.settingsStore = memoryStore;
 
-    targetViewController.delegate = self;
+
     [[self navigationController] pushViewController:targetViewController animated:YES];
 
     // details of an existing account
@@ -252,14 +276,23 @@
 
 #pragma mark - IASKSettingsDelegate
 
+    // todo, this is not called if vc.delegate = self.delegate
 - (void)settingsViewControllerDidEnd:(IASKAppSettingsViewController *)sender {
     NSLog(@"%s", __PRETTY_FUNCTION__);
 
     [self reloadAccountsAnimated:NO];
-
     [self.navigationController popViewControllerAnimated:YES];
 
 }
+
+- (void)dismiss:(id)sender {
+    [super dismiss:sender];
+
+    [self reloadAccountsAnimated:NO];
+    [self.navigationController popViewControllerAnimated:YES];
+
+}
+
 
 - (void)dealloc {
     [_accountTemplatePlist release]; _accountTemplatePlist = nil;

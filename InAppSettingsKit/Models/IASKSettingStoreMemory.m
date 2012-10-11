@@ -40,6 +40,8 @@
 // set the new values to a new dict
 - (void)setObject:(id)value forKey:(NSString*)key {
     [_newMemorySettingStoreDict setObject:value forKey:key];
+
+    //[self synchronize];
 }
 
 // read the values from the old one
@@ -60,6 +62,7 @@
         _newMemorySettingStoreDict = [_existingMemorySettingStore mutableCopy];
     }
 }
+
 
 
 - (BOOL)synchronize {
@@ -88,6 +91,8 @@
     if(idx != NSNotFound) {
         [mutableArray removeObject:_existingMemorySettingStore];
         [mutableArray insertObject:_newMemorySettingStoreDict atIndex:idx];
+
+        [self setExistingMemorySettingStore:_newMemorySettingStoreDict];
 
     } else{
         // add the new one

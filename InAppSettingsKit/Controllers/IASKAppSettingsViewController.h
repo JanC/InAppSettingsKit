@@ -24,6 +24,13 @@
 @class IASKAppSettingsViewController;
 @class IASKSpecifier;
 
+
+@protocol IASKSettingsThemeDelegate
+@optional
+- (void) settingsViewController:(id<IASKViewController>)settingsViewController themeTableView:(UITableView*)tableView;
+- (void) settingsViewController:(id<IASKViewController>)settingsViewController tableView:(UITableView*)tableView themeCell:(UITableViewCell*)cell;
+@end
+
 @protocol IASKSettingsDelegate
 - (void)settingsViewControllerDidEnd:(IASKAppSettingsViewController*)sender;
 
@@ -35,6 +42,10 @@
 - (UIView *) settingsViewController:(id<IASKViewController>)settingsViewController
                           tableView:(UITableView *)tableView 
             viewForHeaderForSection:(NSInteger)section;
+
+- (UIView *) settingsViewController:(id<IASKViewController>)settingsViewController
+                          tableView:(UITableView *)tableView
+            viewForFooterForSection:(NSInteger)section;
 
 #pragma mark - UITableView cell customization
 - (CGFloat)tableView:(UITableView*)tableView heightForSpecifier:(IASKSpecifier*)specifier;
@@ -56,11 +67,16 @@
 - (void)settingsViewController:(IASKAppSettingsViewController*)sender buttonTappedForKey:(NSString*)key __attribute__((deprecated)); // use the method below with specifier instead
 - (void)settingsViewController:(IASKAppSettingsViewController*)sender buttonTappedForSpecifier:(IASKSpecifier*)specifier;
 - (void)settingsViewController:(IASKAppSettingsViewController*)sender tableView:(UITableView *)tableView didSelectCustomViewSpecifier:(IASKSpecifier*)specifier;
+
+#pragma mark - account settings
+- (BOOL)settingsViewController:(id<IASKViewController>)settingsViewController tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath;
+- (UITableViewCell *) settingsViewController:(id<IASKViewController>)settingsViewController tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath;
 @end
 
 
 @interface IASKAppSettingsViewController : UITableViewController <IASKViewController, UITextFieldDelegate, MFMailComposeViewControllerDelegate> {
 	id<IASKSettingsDelegate>  _delegate;
+    id<IASKSettingsDelegate>  _themeDelegate;
     
     NSMutableArray          *_viewList;
 	
@@ -77,6 +93,7 @@
 }
 
 @property (nonatomic, assign) IBOutlet id delegate;
+@property (nonatomic, assign) IBOutlet id themeDelegate;
 @property (nonatomic, copy) NSString *file;
 @property (nonatomic, assign) BOOL showCreditsFooter;
 @property (nonatomic, assign) BOOL showDoneButton;

@@ -54,6 +54,7 @@ CGRect IASKCGRectSwap(CGRect rect);
 @implementation IASKAppSettingsViewController
 
 @synthesize delegate = _delegate;
+@synthesize themeDelegate = _themeDelegate;
 @synthesize viewList = _viewList;
 @synthesize settingsReader = _settingsReader;
 @synthesize file = _file;
@@ -154,6 +155,7 @@ CGRect IASKCGRectSwap(CGRect rect);
     tapGesture.cancelsTouchesInView = NO;
     [self.tableView addGestureRecognizer:tapGesture];
     [tapGesture release];
+
 }
 
 - (void)viewDidUnload {
@@ -195,6 +197,11 @@ CGRect IASKCGRectSwap(CGRect rect);
 												   object:[NSUserDefaults standardUserDefaults]];
 		[self userDefaultsDidChange]; // force update in case of changes while we were hidden
 	}
+
+
+    if([self.themeDelegate respondsToSelector:@selector(settingsViewController:themeTableView:)]) {
+        [self.themeDelegate settingsViewController:self   themeTableView:self.tableView];
+    }
 	[super viewWillAppear:animated];
 }
 
@@ -335,7 +342,7 @@ CGRect IASKCGRectSwap(CGRect rect);
     [_hiddenKeys release], _hiddenKeys = nil;
 	
 	_delegate = nil;
-
+    _themeDelegate=nil;
     [super dealloc];
 }
 
@@ -421,6 +428,14 @@ CGRect IASKCGRectSwap(CGRect rect);
 - (UIView *)tableView:(UITableView*)tableView viewForHeaderInSection:(NSInteger)section {
 	if ([self.delegate respondsToSelector:@selector(settingsViewController:tableView:viewForHeaderForSection:)]) {
 		return [self.delegate settingsViewController:self tableView:tableView viewForHeaderForSection:section];
+	} else {
+		return nil;
+	}
+}
+
+- (UIView *)tableView:(UITableView*)tableView viewForFooterInSection:(NSInteger)section {
+	if ([self.delegate respondsToSelector:@selector(settingsViewController:tableView:viewForFooterForSection:)]) {
+		return [self.delegate settingsViewController:self tableView:tableView viewForFooterForSection:section];
 	} else {
 		return nil;
 	}
@@ -613,6 +628,12 @@ CGRect IASKCGRectSwap(CGRect rect);
 	cell.detailTextLabel.textAlignment = specifier.textAlignment;
 	cell.textLabel.adjustsFontSizeToFitWidth = specifier.adjustsFontSizeToFitWidth;
 	cell.detailTextLabel.adjustsFontSizeToFitWidth = specifier.adjustsFontSizeToFitWidth;
+
+
+    if([self.themeDelegate respondsToSelector:@selector(settingsViewController:tableView:themeCell:)]) {
+        [self.themeDelegate settingsViewController:self   tableView:self.tableView themeCell:cell];
+    }
+
     return cell;
 }
 
@@ -675,7 +696,9 @@ CGRect IASKCGRectSwap(CGRect rect);
         targetViewController.accountCellSubtitleKey = specifier.accountCellSubtitleKey;
         targetViewController.accountCellTitleKey = specifier.accountCellTitleKey;
 
-
+        targetViewController.delegate = self.delegate;
+        targetViewController.themeDelegate = self.themeDelegate;
+        targetViewController.showCreditsFooter = self.showCreditsFooter;
 
         [self.navigationController pushViewController:targetViewController animated:YES];
 
@@ -721,6 +744,7 @@ CGRect IASKCGRectSwap(CGRect rect);
 			targetViewController.showDoneButton = NO;
 			targetViewController.settingsStore = self.settingsStore; 
 			targetViewController.delegate = self.delegate;
+            targetViewController.themeDelegate = self.themeDelegate;
 
             // add the new view controller to the dictionary and then to the 'viewList' array
             [newItemDict setObject:targetViewController forKey:@"viewController"];
